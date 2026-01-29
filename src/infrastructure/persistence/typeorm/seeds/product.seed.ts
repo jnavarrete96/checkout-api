@@ -11,7 +11,7 @@ export async function seedProducts(dataSource: DataSource) {
     return;
   }
 
-  const products: ProductOrmEntity[] = [
+  const productsRaw = [
     {
       id: uuid(),
       name: 'Wireless Headphones',
@@ -85,6 +85,8 @@ export async function seedProducts(dataSource: DataSource) {
       imageUrl: 'https://picsum.photos/id/5/5000/3334',
     },
   ];
+
+  const products = repo.create(productsRaw);
 
   await repo.save(products);
 
