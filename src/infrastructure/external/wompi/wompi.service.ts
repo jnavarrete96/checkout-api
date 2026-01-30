@@ -16,6 +16,9 @@ import {
   WompiTokenizeCardRequest,
   WompiTokenizeCardResponse,
   WompiErrorResponse,
+  WompiTransactionResponse,
+  WompiCreateTransactionRequest,
+  WompiTransactionStatusResponse,
 } from './wompi.types';
 
 @Injectable()
@@ -24,6 +27,7 @@ export class WompiService {
   private readonly baseUrl: string;
   private readonly publicKey: string;
   private readonly requestTimeout: number;
+  private readonly pollingInterval: number;
 
   constructor(
     private readonly httpService: HttpService,
@@ -144,7 +148,94 @@ export class WompiService {
     }
   }
 
-  // TODO: Implementar createTransaction()
-  // TODO: Implementar getTransactionStatus()
-  // TODO: Implementar pollTransactionStatus()
+  // ============================================================
+  // 2. Crear transacción
+  // ============================================================
+
+  async createTransaction(
+    request: WompiCreateTransactionRequest,
+  ): Promise<WompiTransactionResponse> {
+    try {
+      this.logger.log('Creating transaction...');
+      const response = await firstValueFrom(
+        this.httpService.post<WompiTransactionResponse>(
+          `${this.baseUrl}/transactions`,
+          request,
+          {
+            headers: {
+              Authorization: `Bearer ${this.publicKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: this.requestTimeout,
+          },
+        ),
+      );
+      this.logger.log('Transaction created successfully');
+      return response.data;
+    } catch (error) {
+      this.handleError('creating transaction', error);
+      throw error;
+    }
+  }
+
+  // ============================================================
+  // 3. Consultar estado de transacción
+  // ============================================================
+  async getTransactionStatus(
+    transactionId: string,
+  ): Promise<WompiTransactionStatusResponse> {
+    try {
+      this.logger.log(`Getting status for transaction ${transactionId}...`);
+      const response = await firstValueFrom(
+        this.httpService.get<WompiTransactionStatusResponse>(
+          `${this.baseUrl}/transactions/${transactionId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.publicKey}`,
+            },
+            timeout: this.requestTimeout,
+          },
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      this.handleError('getting transaction status', error);
+      throw error;
+    }
+  }
+
+  // ============================================================
+  // 4. Polling hasta estado final
+  // ============================================================
+
+  async pollTransactionStatus(
+    transactionId: string,
+  ): Promise<WompiTransactionStatusResponse> {
+    const maxAttempts = Math.floor(this.requestTimeout / this.pollingInterval);
+    for (let i = 0; i < maxAttempts; i++) {
+      const statusResp = await this.getTransactionStatus(transactionId);
+      if (statusResp.data.status !== 'PENDING') {
+        this.logger.log(`Final status: ${statusResp.data.status}`);
+        return statusResp;
+      }
+      this.logger.debug(`Still pending... attempt ${i + 1}`);
+      await new Promise((resolve) => setTimeout(resolve, this.pollingInterval));
+    }
+    throw new Error('Polling timeout exceeded');
+  }
+
+  // ============================================================
+  // Helper para manejo de errores
+  // ============================================================
+  private handleError(context: string, error: any) {
+    this.logger.error(`Error ${context}`, error);
+    if (error instanceof AxiosError) {
+      const wompiError = error.response?.data as WompiErrorResponse;
+      if (wompiError?.error) {
+        const errorMessages = Object.values(wompiError.error.messages).flat();
+        const errorMessage = errorMessages.join(', ');
+        this.logger.error(`Wompi API error: ${errorMessage}`);
+      }
+    }
+  }
 }
