@@ -1,6 +1,8 @@
 import {
   Controller,
   Post,
+  Patch,
+  Param,
   Body,
   HttpCode,
   HttpStatus,
@@ -9,6 +11,8 @@ import {
 } from '@nestjs/common';
 import { CreateTransactionUseCase } from '../../../application/use-cases/create-transaction/create-transaction.use-case';
 import { CreateTransactionDto } from '../../../application/use-cases/create-transaction/create-transaction.dto';
+import { ProcessPaymentUseCase } from '@application/use-cases/process-payment/process-payment.use-case';
+import { ProcessPaymentInput } from '@application/use-cases/process-payment/process-payment.dto';
 
 @Controller('transactions')
 export class TransactionController {
@@ -16,6 +20,7 @@ export class TransactionController {
 
   constructor(
     private readonly createTransactionUseCase: CreateTransactionUseCase,
+    private readonly processPaymentUseCase: ProcessPaymentUseCase,
   ) {}
 
   @Post()
@@ -33,6 +38,28 @@ export class TransactionController {
     this.logger.log(
       `Transaction created successfully: ${result.value.transactionNo}`,
     );
+
+    return result.value;
+  }
+
+  @Patch(':id/process-payment')
+  async processPayment(
+    @Param('id') transactionId: string,
+    @Body() body: Omit<ProcessPaymentInput, 'transactionId'>,
+  ) {
+    this.logger.log(`Processing payment for transaction ${transactionId}`);
+
+    const result = await this.processPaymentUseCase.execute({
+      transactionId,
+      ...body,
+    });
+
+    if (result.isFailure) {
+      this.logger.error(`Payment failed: ${result.error}`);
+      throw new BadRequestException(result.error);
+    }
+
+    this.logger.log(`Payment processed successfully: ${result.value.status}`);
 
     return result.value;
   }

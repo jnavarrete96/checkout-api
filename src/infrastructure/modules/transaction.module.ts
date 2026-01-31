@@ -32,6 +32,9 @@ import {
   IProductRepository,
   ITransactionRepository,
 } from '@domain/index';
+import { WompiModule } from '@infrastructure/external/wompi/wompi.module';
+import { ProcessPaymentUseCase } from '@application/use-cases/process-payment/process-payment.use-case';
+import { WompiService } from '@infrastructure/external/wompi/wompi.service';
 
 // Tokens para inyección de dependencias
 export const CUSTOMER_REPOSITORY = 'ICustomerRepository';
@@ -47,6 +50,7 @@ export const DELIVERY_REPOSITORY = 'IDeliveryRepository';
       ProductOrmEntity,
       DeliveryTypeORM,
     ]),
+    WompiModule,
   ],
   controllers: [TransactionController],
   providers: [
@@ -88,6 +92,28 @@ export const DELIVERY_REPOSITORY = 'IDeliveryRepository';
         PRODUCT_REPOSITORY,
         TRANSACTION_REPOSITORY,
         DELIVERY_REPOSITORY,
+      ],
+    },
+    {
+      provide: ProcessPaymentUseCase,
+      useFactory: (
+        transactionRepo: ITransactionRepository,
+        productRepo: IProductRepository,
+        customerRepo: ICustomerRepository,
+        wompiService: WompiService,
+      ) => {
+        return new ProcessPaymentUseCase(
+          transactionRepo,
+          productRepo,
+          customerRepo,
+          wompiService,
+        );
+      },
+      inject: [
+        TRANSACTION_REPOSITORY,
+        PRODUCT_REPOSITORY,
+        CUSTOMER_REPOSITORY,
+        WompiService,
       ],
     },
   ],

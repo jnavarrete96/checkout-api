@@ -5,7 +5,7 @@
  * 
  * Por ahora solo implementamos tokenizeCard() para probar la integración.
  */
-
+import * as crypto from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
@@ -29,6 +29,7 @@ export class WompiService {
   private readonly publicKey: string;
   private readonly requestTimeout: number;
   private readonly pollingInterval: number;
+  private readonly integrityKey: string;
   private acceptanceToken?: string;
 
   constructor(
@@ -40,6 +41,10 @@ export class WompiService {
       'https://api-sandbox.co.uat.wompi.dev/v1',
     );
     this.publicKey = this.configService.get<string>('wompi.publicKey', '');
+    this.integrityKey = this.configService.get<string>(
+      'wompi.integrityKey',
+      '',
+    );
     this.requestTimeout = this.configService.get<number>(
       'wompi.requestTimeout',
       30000,
@@ -183,6 +188,24 @@ export class WompiService {
   }
 
   // ============================================================
+  // 1.2 Generar firma de integridad
+  // ============================================================
+
+  private generateSignature(params: {
+    reference: string;
+    amountInCents: number;
+    currency: string;
+  }): string {
+    const { reference, amountInCents, currency } = params;
+
+    const raw = `${reference}${amountInCents}${currency}${this.integrityKey}`;
+
+    this.logger.debug(`Signature raw string: ${raw}`);
+
+    return crypto.createHash('sha256').update(raw).digest('hex');
+  }
+
+  // ============================================================
   // 2. Crear transacción
   // ============================================================
 
@@ -192,12 +215,18 @@ export class WompiService {
     try {
       this.logger.log('Creating transaction...');
       const acceptanceToken = await this.getAcceptanceToken();
+      const signature = this.generateSignature({
+        reference: request.reference,
+        amountInCents: request.amount_in_cents,
+        currency: request.currency,
+      });
       const response = await firstValueFrom(
         this.httpService.post<WompiTransactionResponse>(
           `${this.baseUrl}/transactions`,
           {
             ...request,
             acceptance_token: acceptanceToken,
+            signature,
           },
           {
             headers: {
