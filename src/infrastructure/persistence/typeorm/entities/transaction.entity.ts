@@ -41,21 +41,53 @@ export class TransactionTypeORM {
   status: TransactionStatus;
 
   // Cost breakdown
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   amount: number;
 
   @Column({
     type: 'decimal',
     precision: 10,
     scale: 2,
+    default: 5000,
     name: 'base_fee',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
   })
   baseFee: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'delivery_fee' })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 10000,
+    name: 'delivery_fee',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   deliveryFee: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'total_amount' })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    name: 'total_amount',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   totalAmount: number;
 
   // Payment gateway references

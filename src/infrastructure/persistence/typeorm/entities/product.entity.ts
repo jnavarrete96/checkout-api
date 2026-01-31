@@ -17,12 +17,13 @@ export class ProductOrmEntity {
   @Column({ type: 'text', nullable: true })
   description?: string | null;
 
-  @Column('decimal', {
+  @Column({
+    type: 'decimal',
     precision: 10,
     scale: 2,
     transformer: {
       to: (value: number) => value,
-      from: (value: string) => Number.parseFloat(value),
+      from: (value: string) => parseFloat(value),
     },
   })
   price: number;

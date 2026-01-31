@@ -171,10 +171,6 @@ export class WompiService {
   // ============================================================
 
   private async getAcceptanceToken(): Promise<string> {
-    if (this.acceptanceToken) {
-      return this.acceptanceToken;
-    }
-
     this.logger.log('Fetching acceptance token from Wompi...');
 
     const response = await firstValueFrom(
