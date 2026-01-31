@@ -14,9 +14,6 @@ import { Transaction } from '../../../domain/entities/Transaction.entity';
 import { Delivery } from '../../../domain/entities/Delivery.entity';
 import { Customer } from '../../../domain/entities/Customer.entity';
 
-const baseFee = Number(process.env.BASE_FEE ?? 0);
-const deliveryFee = Number(process.env.DELIVERY_FEE ?? 0);
-
 export class CreateTransactionUseCase {
   constructor(
     private readonly customerRepository: ICustomerRepository,
@@ -39,9 +36,16 @@ export class CreateTransactionUseCase {
       return Result.fail('Product not found');
     }
 
+    if (!product.isActive) {
+      return Result.fail('Product not available');
+    }
+
     if (!product.hasStock(input.quantity)) {
       return Result.fail('Insufficient stock');
     }
+
+    const baseFee = Number(process.env.BASE_FEE ?? 0);
+    const deliveryFee = Number(process.env.DELIVERY_FEE ?? 0);
 
     const amount = product.price * input.quantity;
     const totalAmount = amount + baseFee + deliveryFee;

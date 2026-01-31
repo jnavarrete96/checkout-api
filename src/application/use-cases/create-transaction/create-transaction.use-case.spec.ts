@@ -8,13 +8,6 @@ import {
   IDeliveryRepository,
 } from '../../../domain';
 
-const existingCustomer = new Customer({
-  id: 'customer-1',
-  email: 'existing@test.com',
-  fullName: 'Existing User',
-  phone: '3000000000',
-});
-
 const productWithoutStock = new Product({
   id: 'product-1',
   name: 'Test Product',
@@ -39,6 +32,8 @@ describe('CreateTransactionUseCase', () => {
   let deliveryRepository: jest.Mocked<IDeliveryRepository>;
 
   beforeEach(() => {
+    process.env.BASE_FEE = '5000';
+    process.env.DELIVERY_FEE = '10000';
     customerRepository = {
       findById: jest.fn(),
       findByEmail: jest.fn(),
@@ -86,6 +81,12 @@ describe('CreateTransactionUseCase', () => {
 
   describe('Product validation', () => {
     it('should fail if product does not exist', async () => {
+      const existingCustomer = new Customer({
+        id: 'customer-1',
+        email: 'existing@test.com',
+        fullName: 'Existing User',
+        phone: '3000000000',
+      });
       customerRepository.findByEmail.mockResolvedValue(existingCustomer);
       productRepository.findById.mockResolvedValue(null);
 
@@ -108,6 +109,12 @@ describe('CreateTransactionUseCase', () => {
     });
 
     it('should fail if product is not available', async () => {
+      const existingCustomer = new Customer({
+        id: 'customer-1',
+        email: 'existing@test.com',
+        fullName: 'Existing User',
+        phone: '3000000000',
+      });
       customerRepository.findByEmail.mockResolvedValue(existingCustomer);
 
       const inactiveProduct = new Product({
@@ -139,6 +146,12 @@ describe('CreateTransactionUseCase', () => {
     });
 
     it('should fail if stock is insufficient', async () => {
+      const existingCustomer = new Customer({
+        id: 'customer-1',
+        email: 'existing@test.com',
+        fullName: 'Existing User',
+        phone: '3000000000',
+      });
       customerRepository.findByEmail.mockResolvedValue(existingCustomer);
       productRepository.findById.mockResolvedValue(productWithoutStock);
 
@@ -179,7 +192,7 @@ describe('CreateTransactionUseCase', () => {
         quantity: 1,
         deliveryFullName: 'New User',
         deliveryPhone: '3009876543',
-        deliveryAddress: 'Calle 456',
+        deliveryAddress: 'Calle 456 #12-34',
         deliveryCity: 'Bogotá',
         deliveryState: 'Cundinamarca',
       });
@@ -197,6 +210,12 @@ describe('CreateTransactionUseCase', () => {
     });
 
     it('should reuse existing customer if email exists and data unchanged', async () => {
+      const existingCustomer = new Customer({
+        id: 'customer-1',
+        email: 'existing@test.com',
+        fullName: 'Existing User',
+        phone: '3000000000',
+      });
       customerRepository.findByEmail.mockResolvedValue(existingCustomer);
       productRepository.findById.mockResolvedValue(productWithStock);
       transactionRepository.create.mockImplementation((t) =>
@@ -212,7 +231,7 @@ describe('CreateTransactionUseCase', () => {
         quantity: 1,
         deliveryFullName: 'Existing User',
         deliveryPhone: '3000000000',
-        deliveryAddress: 'Calle 789',
+        deliveryAddress: 'Calle 789 #12-34',
         deliveryCity: 'Cali',
         deliveryState: 'Valle del Cauca',
       });
@@ -229,6 +248,12 @@ describe('CreateTransactionUseCase', () => {
     });
 
     it('should update existing customer if data changed', async () => {
+      const existingCustomer = new Customer({
+        id: 'customer-1',
+        email: 'existing@test.com',
+        fullName: 'Existing User',
+        phone: '3000000000',
+      });
       customerRepository.findByEmail.mockResolvedValue(existingCustomer);
       customerRepository.update.mockImplementation((c) => Promise.resolve(c));
       productRepository.findById.mockResolvedValue(productWithStock);
@@ -245,7 +270,7 @@ describe('CreateTransactionUseCase', () => {
         quantity: 1,
         deliveryFullName: 'Updated Name',
         deliveryPhone: '3002222222',
-        deliveryAddress: 'Calle 789',
+        deliveryAddress: 'Calle 789 #12-34',
         deliveryCity: 'Cali',
         deliveryState: 'Valle del Cauca',
       });
@@ -260,6 +285,12 @@ describe('CreateTransactionUseCase', () => {
 
   describe('Transaction creation', () => {
     it('should create transaction and delivery successfully', async () => {
+      const existingCustomer = new Customer({
+        id: 'customer-1',
+        email: 'existing@test.com',
+        fullName: 'Existing User',
+        phone: '3000000000',
+      });
       customerRepository.findByEmail.mockResolvedValue(existingCustomer);
       productRepository.findById.mockResolvedValue(productWithStock);
       transactionRepository.create.mockImplementation((t) =>
@@ -307,6 +338,12 @@ describe('CreateTransactionUseCase', () => {
     });
 
     it('should calculate total amount correctly', async () => {
+      const existingCustomer = new Customer({
+        id: 'customer-1',
+        email: 'existing@test.com',
+        fullName: 'Existing User',
+        phone: '3000000000',
+      });
       customerRepository.findByEmail.mockResolvedValue(existingCustomer);
       productRepository.findById.mockResolvedValue(productWithStock);
       transactionRepository.create.mockImplementation((t) =>
