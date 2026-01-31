@@ -17,13 +17,7 @@ import {
 import { CustomerTypeORM } from './customer.entity';
 import { ProductOrmEntity } from './product.entity';
 import { DeliveryTypeORM } from './delivery.entity';
-
-export enum TransactionStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  DECLINED = 'DECLINED',
-  ERROR = 'ERROR',
-}
+import { TransactionStatus } from '@shared/types/TransactionStatus';
 
 @Entity('transactions')
 export class TransactionTypeORM {
