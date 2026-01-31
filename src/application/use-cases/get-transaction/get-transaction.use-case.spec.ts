@@ -270,7 +270,7 @@ describe('GetTransactionUseCase', () => {
         transactionId: 'transaction-1',
         fullName: 'Test User',
         phone: '3001234567',
-        address: 'Calle 123',
+        address: 'Calle 123 #45-67',
         city: 'Bogotá',
         state: 'Cundinamarca',
       });
