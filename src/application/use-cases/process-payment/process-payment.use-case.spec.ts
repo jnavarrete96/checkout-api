@@ -125,7 +125,10 @@ describe('ProcessPaymentUseCase', () => {
     });
 
     it('should fail if customer not found', async () => {
-      transactionRepository.findById.mockResolvedValue(pendingTransaction);
+      transactionRepository.findById.mockResolvedValue(
+        new Transaction(pendingTransaction.toObject()),
+      );
+
       customerRepository.findById.mockResolvedValue(null);
 
       const result = await useCase.execute(validInput);
@@ -135,7 +138,9 @@ describe('ProcessPaymentUseCase', () => {
     });
 
     it('should fail if card tokenization fails', async () => {
-      transactionRepository.findById.mockResolvedValue(pendingTransaction);
+      transactionRepository.findById.mockResolvedValue(
+        new Transaction(pendingTransaction.toObject()),
+      );
       customerRepository.findById.mockResolvedValue(customer);
       wompiService.tokenizeCard.mockResolvedValue({
         success: false,
@@ -151,7 +156,9 @@ describe('ProcessPaymentUseCase', () => {
 
   describe('Successful payment (APPROVED)', () => {
     it('should process payment successfully', async () => {
-      transactionRepository.findById.mockResolvedValue(pendingTransaction);
+      transactionRepository.findById.mockResolvedValue(
+        new Transaction(pendingTransaction.toObject()),
+      );
       customerRepository.findById.mockResolvedValue(customer);
       productRepository.findById.mockResolvedValue(product);
 
@@ -221,7 +228,9 @@ describe('ProcessPaymentUseCase', () => {
     });
 
     it('should handle PENDING status and poll until APPROVED', async () => {
-      transactionRepository.findById.mockResolvedValue(pendingTransaction);
+      transactionRepository.findById.mockResolvedValue(
+        new Transaction(pendingTransaction.toObject()),
+      );
       customerRepository.findById.mockResolvedValue(customer);
       productRepository.findById.mockResolvedValue(product);
 
@@ -298,7 +307,9 @@ describe('ProcessPaymentUseCase', () => {
 
   describe('Failed payment (DECLINED)', () => {
     it('should handle declined payment', async () => {
-      transactionRepository.findById.mockResolvedValue(pendingTransaction);
+      transactionRepository.findById.mockResolvedValue(
+        new Transaction(pendingTransaction.toObject()),
+      );
       customerRepository.findById.mockResolvedValue(customer);
 
       wompiService.tokenizeCard.mockResolvedValue({
@@ -362,7 +373,9 @@ describe('ProcessPaymentUseCase', () => {
 
   describe('Payment error', () => {
     it('should handle payment error status', async () => {
-      transactionRepository.findById.mockResolvedValue(pendingTransaction);
+      transactionRepository.findById.mockResolvedValue(
+        new Transaction(pendingTransaction.toObject()),
+      );
       customerRepository.findById.mockResolvedValue(customer);
 
       wompiService.tokenizeCard.mockResolvedValue({
