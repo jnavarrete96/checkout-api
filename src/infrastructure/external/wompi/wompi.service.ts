@@ -19,6 +19,7 @@ import {
   WompiTransactionResponse,
   WompiCreateTransactionRequest,
   WompiTransactionStatusResponse,
+  WompiMerchantResponse,
 } from './wompi.types';
 
 @Injectable()
@@ -28,6 +29,7 @@ export class WompiService {
   private readonly publicKey: string;
   private readonly requestTimeout: number;
   private readonly pollingInterval: number;
+  private acceptanceToken?: string;
 
   constructor(
     private readonly httpService: HttpService,
@@ -149,6 +151,38 @@ export class WompiService {
   }
 
   // ============================================================
+  // 1.1 Obtener acceptance token (cacheado)
+  // ============================================================
+
+  private async getAcceptanceToken(): Promise<string> {
+    if (this.acceptanceToken) {
+      return this.acceptanceToken;
+    }
+
+    this.logger.log('Fetching acceptance token from Wompi...');
+
+    const response = await firstValueFrom(
+      this.httpService.get<WompiMerchantResponse>(
+        `${this.baseUrl}/merchants/${this.publicKey}`,
+        {
+          timeout: this.requestTimeout,
+        },
+      ),
+    );
+
+    const acceptanceToken =
+      response.data.data.presigned_acceptance.acceptance_token;
+
+    if (!acceptanceToken) {
+      throw new Error('Acceptance token not found in Wompi response');
+    }
+
+    this.acceptanceToken = acceptanceToken;
+
+    return acceptanceToken;
+  }
+
+  // ============================================================
   // 2. Crear transacción
   // ============================================================
 
@@ -157,10 +191,14 @@ export class WompiService {
   ): Promise<WompiTransactionResponse> {
     try {
       this.logger.log('Creating transaction...');
+      const acceptanceToken = await this.getAcceptanceToken();
       const response = await firstValueFrom(
         this.httpService.post<WompiTransactionResponse>(
           `${this.baseUrl}/transactions`,
-          request,
+          {
+            ...request,
+            acceptance_token: acceptanceToken,
+          },
           {
             headers: {
               Authorization: `Bearer ${this.publicKey}`,
@@ -173,6 +211,7 @@ export class WompiService {
       this.logger.log('Transaction created successfully');
       return response.data;
     } catch (error) {
+      this.acceptanceToken = undefined;
       this.handleError('creating transaction', error);
       throw error;
     }

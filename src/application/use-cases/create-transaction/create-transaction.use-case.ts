@@ -39,10 +39,6 @@ export class CreateTransactionUseCase {
       return Result.fail('Product not found');
     }
 
-    if (product.stockQuantity < input.quantity) {
-      return Result.fail('Insufficient stock');
-    }
-
     if (!product.hasStock(input.quantity)) {
       return Result.fail('Insufficient stock');
     }
@@ -59,7 +55,6 @@ export class CreateTransactionUseCase {
       baseFee: baseFee,
       deliveryFee: deliveryFee,
       totalAmount,
-      status: 'PENDING',
     });
 
     await this.transactionRepository.create(transaction);
