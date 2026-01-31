@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductModule } from './infrastructure/modules/product.module';
 import { WompiModule } from '@infrastructure/external/wompi/wompi.module';
 import wompiConfig from '@infrastructure/config/wompi.config';
+import { TransactionModule } from '@infrastructure/modules/transaction.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import wompiConfig from '@infrastructure/config/wompi.config';
       }),
     }),
     ProductModule,
+    TransactionModule,
     WompiModule,
   ],
 })
