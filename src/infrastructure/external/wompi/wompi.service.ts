@@ -28,6 +28,7 @@ export class WompiService {
   private readonly baseUrl: string;
   private readonly publicKey: string;
   private readonly requestTimeout: number;
+  private readonly pollingTimeout: number;
   private readonly pollingInterval: number;
   private readonly integrityKey: string;
   private acceptanceToken?: string;
@@ -48,6 +49,16 @@ export class WompiService {
     this.requestTimeout = this.configService.get<number>(
       'wompi.requestTimeout',
       30000,
+    );
+
+    this.pollingTimeout = this.configService.get<number>(
+      'wompi.pollingTimeout',
+      30000,
+    );
+
+    this.pollingInterval = this.configService.get<number>(
+      'wompi.pollingInterval',
+      2000, // 2 segundos por defecto
     );
 
     this.logger.log(`Wompi Service initialized`);
@@ -279,17 +290,41 @@ export class WompiService {
   async pollTransactionStatus(
     transactionId: string,
   ): Promise<WompiTransactionStatusResponse> {
-    const maxAttempts = Math.floor(this.requestTimeout / this.pollingInterval);
+    const maxAttempts = Math.floor(this.pollingTimeout / this.pollingInterval);
+
+    this.logger.log(
+      `Polling transaction ${transactionId} - Max attempts: ${maxAttempts}`,
+    );
+
     for (let i = 0; i < maxAttempts; i++) {
       const statusResp = await this.getTransactionStatus(transactionId);
+
+      this.logger.debug(
+        `Polling attempt ${i + 1}/${maxAttempts} - Status: ${statusResp.data.status}`,
+      );
+
       if (statusResp.data.status !== 'PENDING') {
-        this.logger.log(`Final status: ${statusResp.data.status}`);
+        this.logger.log(
+          `Transaction ${transactionId} final status: ${statusResp.data.status}`,
+        );
         return statusResp;
       }
-      this.logger.debug(`Still pending... attempt ${i + 1}`);
-      await new Promise((resolve) => setTimeout(resolve, this.pollingInterval));
+
+      // Esperar antes del siguiente intento (excepto en el último)
+      if (i < maxAttempts - 1) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, this.pollingInterval),
+        );
+      }
     }
-    throw new Error('Polling timeout exceeded');
+
+    this.logger.error(
+      `Polling timeout exceeded for transaction ${transactionId} after ${maxAttempts} attempts`,
+    );
+
+    throw new Error(
+      `Polling timeout exceeded after ${this.pollingTimeout}ms (${maxAttempts} attempts)`,
+    );
   }
 
   // ============================================================
