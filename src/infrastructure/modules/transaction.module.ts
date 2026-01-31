@@ -36,6 +36,7 @@ import { WompiModule } from '@infrastructure/external/wompi/wompi.module';
 import { ProcessPaymentUseCase } from '@application/use-cases/process-payment/process-payment.use-case';
 import { WompiService } from '@infrastructure/external/wompi/wompi.service';
 import { GetTransactionUseCase } from '@application/use-cases/get-transaction/get-transaction.use-case';
+import { RecoverTransactionUseCase } from '@application/use-cases/recover-transaction/recover-transaction.use-case';
 
 // Tokens para inyección de dependencias
 export const CUSTOMER_REPOSITORY = 'ICustomerRepository';
@@ -126,6 +127,28 @@ export const DELIVERY_REPOSITORY = 'IDeliveryRepository';
         deliveryRepo: IDeliveryRepository,
       ) => {
         return new GetTransactionUseCase(
+          transactionRepo,
+          customerRepo,
+          productRepo,
+          deliveryRepo,
+        );
+      },
+      inject: [
+        TRANSACTION_REPOSITORY,
+        CUSTOMER_REPOSITORY,
+        PRODUCT_REPOSITORY,
+        DELIVERY_REPOSITORY,
+      ],
+    },
+    {
+      provide: RecoverTransactionUseCase,
+      useFactory: (
+        transactionRepo: ITransactionRepository,
+        customerRepo: ICustomerRepository,
+        productRepo: IProductRepository,
+        deliveryRepo: IDeliveryRepository,
+      ) => {
+        return new RecoverTransactionUseCase(
           transactionRepo,
           customerRepo,
           productRepo,

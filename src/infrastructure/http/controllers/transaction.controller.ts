@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Body,
+  Query,
   HttpCode,
   HttpStatus,
   BadRequestException,
@@ -16,6 +17,11 @@ import { CreateTransactionDto } from '../../../application/use-cases/create-tran
 import { ProcessPaymentUseCase } from '@application/use-cases/process-payment/process-payment.use-case';
 import { ProcessPaymentInput } from '@application/use-cases/process-payment/process-payment.dto';
 import { GetTransactionUseCase } from '@application/use-cases/get-transaction/get-transaction.use-case';
+import {
+  RecoverTransactionQueryDto,
+  RecoverTransactionResponseDto,
+} from '../dto/recover-transaction.http.dto';
+import { RecoverTransactionUseCase } from '@application/use-cases/recover-transaction/recover-transaction.use-case';
 
 @Controller('transactions')
 export class TransactionController {
@@ -25,6 +31,7 @@ export class TransactionController {
     private readonly createTransactionUseCase: CreateTransactionUseCase,
     private readonly processPaymentUseCase: ProcessPaymentUseCase,
     private readonly getTransactionUseCase: GetTransactionUseCase,
+    private readonly recoverTransactionUseCase: RecoverTransactionUseCase,
   ) {}
 
   @Post()
@@ -64,6 +71,36 @@ export class TransactionController {
     }
 
     this.logger.log(`Payment processed successfully: ${result.value.status}`);
+
+    return result.value;
+  }
+
+  /**
+   * GET /api/transactions/recover?email=xxx
+   * Recuperar transacción PENDING por email
+   * - Permite al usuario continuar con el pago si cerró el navegador
+   * - Devuelve la transacción PENDING más reciente
+   * - Útil para resiliencia y mejor UX
+   */
+  @Get('recover')
+  @HttpCode(HttpStatus.OK)
+  async recoverTransaction(
+    @Query() query: RecoverTransactionQueryDto,
+  ): Promise<RecoverTransactionResponseDto> {
+    this.logger.log(`Recovering transaction for email: ${query.email}`);
+
+    const result = await this.recoverTransactionUseCase.execute({
+      email: query.email,
+    });
+
+    if (result.isFailure) {
+      this.logger.warn(`No pending transaction found for: ${query.email}`);
+      throw new NotFoundException(result.error);
+    }
+
+    this.logger.log(
+      `Transaction recovered: ${result.value.transaction.transactionNo}`,
+    );
 
     return result.value;
   }
