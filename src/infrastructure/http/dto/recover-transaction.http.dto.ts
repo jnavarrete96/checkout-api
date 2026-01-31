@@ -3,8 +3,13 @@
  */
 
 import { IsEmail, IsNotEmpty } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class RecoverTransactionQueryDto {
+  @ApiProperty({
+    description: 'Email del cliente para buscar transacciones pendientes',
+    example: 'juan@gmail.com',
+  })
   @IsEmail()
   @IsNotEmpty()
   email: string;
