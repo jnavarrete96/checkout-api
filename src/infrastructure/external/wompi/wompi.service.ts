@@ -91,6 +91,18 @@ export class WompiService {
     try {
       this.logger.log('Tokenizing card...');
 
+      const expirationValidation = this.validateCardExpiration(
+        cardData.expMonth,
+        cardData.expYear,
+      );
+
+      if (!expirationValidation.valid) {
+        return {
+          success: false,
+          error: expirationValidation.error,
+        };
+      }
+
       // Preparar request según formato de Wompi
       const requestBody: WompiTokenizeCardRequest = {
         number: cardData.number.replace(/\s/g, ''), // Remover espacios
@@ -336,5 +348,33 @@ export class WompiService {
         this.logger.error(`Wompi API error: ${errorMessage}`);
       }
     }
+  }
+
+  private validateCardExpiration(
+    expMonth: string,
+    expYear: string,
+  ): { valid: boolean; error?: string } {
+    const now = new Date();
+    const currentYear = now.getFullYear() % 100;
+    const currentMonth = now.getMonth() + 1;
+
+    const year = Number(expYear);
+    const month = Number(expMonth);
+
+    if (Number.isNaN(year) || Number.isNaN(month) || month < 1 || month > 12) {
+      return {
+        valid: false,
+        error: 'Invalid card expiration date',
+      };
+    }
+
+    if (year < currentYear || (year === currentYear && month < currentMonth)) {
+      return {
+        valid: false,
+        error: 'Card is expired',
+      };
+    }
+
+    return { valid: true };
   }
 }
