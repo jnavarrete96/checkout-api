@@ -358,16 +358,23 @@ describe('ProcessPaymentUseCase', () => {
 
       const result = await useCase.execute(validInput);
 
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('declined');
+      expect(result.isSuccess).toBe(true);
 
-      // Verificar que se actualizó la transacción a DECLINED
-      const updateCalls = transactionRepository.update.mock.calls.length;
-      expect(updateCalls).toBe(1);
+      if (result.isSuccess) {
+        expect(result.value.status).toBe('DECLINED');
+        expect(result.value.wompiTransactionId).toBe('wompi-tx-declined');
+        expect(result.value.cardBrand).toBeUndefined(); // correcto según tu decline
+        expect(result.value.cardLastFour).toBeUndefined();
+        expect(result.value.message).toContain('declined');
+      }
 
-      // Verificar que NO se actualizó el stock
-      const productUpdateCalls = productRepository.update.mock.calls.length;
-      expect(productUpdateCalls).toBe(0);
+      // Se actualiza la transacción
+      const updateSpy = jest.spyOn(transactionRepository, 'update');
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+
+      // ❌ NO se toca el stock
+      const productUpdateSpy = jest.spyOn(productRepository, 'update');
+      expect(productUpdateSpy).toHaveBeenCalledTimes(0);
     });
   });
 

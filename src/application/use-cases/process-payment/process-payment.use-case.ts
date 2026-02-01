@@ -139,7 +139,17 @@ export class ProcessPaymentUseCase {
 
         await this.transactionRepository.update(transaction);
 
-        return Result.fail('Payment declined by payment gateway');
+        return Result.ok({
+          transactionId: transaction.id,
+          transactionNo: transaction.transactionNo,
+          status: 'DECLINED',
+          totalAmount: transaction.totalAmount,
+          wompiTransactionId: transaction.wompiTransactionId!,
+          wompiReference: transaction.wompiReference!,
+          cardBrand: transaction.cardBrand ?? undefined,
+          cardLastFour: transaction.cardLastFour ?? undefined,
+          message: 'Payment declined by payment gateway',
+        });
       } else {
         // 7d. Marcar como error
         transaction.markAsError({
