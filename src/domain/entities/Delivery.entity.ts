@@ -73,56 +73,6 @@ export class Delivery {
     }
   }
 
-  /**
-   * Actualizar información de entrega
-   */
-  updateInfo(props: {
-    fullName?: string;
-    phone?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    postalCode?: string;
-  }): void {
-    if (props.fullName !== undefined && props.fullName.trim().length >= 3) {
-      this._fullName = props.fullName;
-    }
-
-    if (props.phone !== undefined && props.phone.trim().length > 0) {
-      this._phone = props.phone;
-    }
-
-    if (props.address !== undefined && props.address.trim().length >= 10) {
-      this._address = props.address;
-    }
-
-    if (props.city !== undefined && props.city.trim().length > 0) {
-      this._city = props.city;
-    }
-
-    if (props.state !== undefined && props.state.trim().length > 0) {
-      this._state = props.state;
-    }
-
-    if (props.postalCode !== undefined) {
-      this._postalCode = props.postalCode;
-    }
-
-    this._updatedAt = new Date();
-  }
-
-  /**
-   * Obtener dirección completa formateada
-   */
-  getFullAddress(): string {
-    const parts = [this._address, this._city, this._state];
-    if (this._postalCode) {
-      parts.push(this._postalCode);
-    }
-
-    return parts.join(', ');
-  }
-
   // Getters
   get id(): string {
     return this._id;

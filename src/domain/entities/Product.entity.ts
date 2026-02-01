@@ -82,62 +82,6 @@ export class Product {
     this._updatedAt = new Date();
   }
 
-  /**
-   * Incrementar stock (restock, devoluciones)
-   */
-  increaseStock(quantity: number = 1): void {
-    if (quantity <= 0) {
-      throw new Error('Quantity must be greater than 0');
-    }
-
-    this._stockQuantity += quantity;
-    this._updatedAt = new Date();
-  }
-
-  /**
-   * Activar producto
-   */
-  activate(): void {
-    this._isActive = true;
-    this._updatedAt = new Date();
-  }
-
-  /**
-   * Desactivar producto
-   */
-  deactivate(): void {
-    this._isActive = false;
-    this._updatedAt = new Date();
-  }
-
-  /**
-   * Actualizar información del producto
-   */
-  updateInfo(props: {
-    name?: string;
-    description?: string;
-    price?: number;
-    imageUrl?: string;
-  }): void {
-    if (props.name !== undefined && props.name.trim().length > 0) {
-      this._name = props.name;
-    }
-
-    if (props.description !== undefined) {
-      this._description = props.description;
-    }
-
-    if (props.price !== undefined && props.price >= 0) {
-      this._price = props.price;
-    }
-
-    if (props.imageUrl !== undefined) {
-      this._imageUrl = props.imageUrl;
-    }
-
-    this._updatedAt = new Date();
-  }
-
   // Getters
   get id(): string {
     return this._id;

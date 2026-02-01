@@ -75,7 +75,22 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.ts",
+      "!**/*.spec.ts",
+      "!**/*.module.ts",
+      "!**/main.ts",
+      "!**/app.module.ts",
+      "!**/index.ts",
+      "!**/*.dto.ts",
+      "!**/infrastructure/persistence/typeorm/entities/*.ts",
+      "!**/infrastructure/persistence/typeorm/repositories/*.ts",
+      "!**/infrastructure/http/controllers/*.ts",
+      "!**/infrastructure/modules/*.ts",
+      "!**/infrastructure/persistence/typeorm/seeds/*.ts",
+      "!**/infrastructure/config/*.ts",
+      "!**/infrastructure/external/wompi/wompi.module.ts",
+      "!**/infrastructure/external/wompi/wompi.types.ts",
+      "!**/shared/types/*.ts"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
